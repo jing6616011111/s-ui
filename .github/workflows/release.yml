@@ -2,12 +2,18 @@ name: Release S-UI
 
 on:
   push:
+    branches:
+      - main
     tags:
       - "*"
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
+    if: github.event_name == 'workflow_dispatch' || github.ref_type == 'tag' || contains(github.event.head_commit.message || '', '[release]')
     strategy:
       matrix:
         platform:
@@ -18,7 +24,7 @@ jobs:
           - armv5
           - 386
           - s390x
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4.2.2
@@ -36,22 +42,22 @@ jobs:
         with:
           node-version: '22'
           registry-url: 'https://registry.npmjs.org'
-          
+
       - name: Install dependencies
         run: |
           sudo apt-get update
-          if [ "${{ matrix.platform }}" == "arm64" ]; then
-            sudo apt install gcc-aarch64-linux-gnu
-          elif [ "${{ matrix.platform }}" == "armv7" ]; then
-            sudo apt install gcc-arm-linux-gnueabihf
-          elif [ "${{ matrix.platform }}" == "armv6" ]; then
-            sudo apt install gcc-arm-linux-gnueabihf
-          elif [ "${{ matrix.platform }}" == "armv5" ]; then
-            sudo apt install gcc-arm-linux-gnueabi
-          elif [ "${{ matrix.platform }}" == "386" ]; then
-            sudo apt install gcc-i686-linux-gnu
-          elif [ "${{ matrix.platform }}" == "s390x" ]; then
-            sudo apt install gcc-s390x-linux-gnu
+          if [ "${{ matrix.platform }}" = "arm64" ]; then
+            sudo apt-get install -y gcc-aarch64-linux-gnu
+          elif [ "${{ matrix.platform }}" = "armv7" ]; then
+            sudo apt-get install -y gcc-arm-linux-gnueabihf
+          elif [ "${{ matrix.platform }}" = "armv6" ]; then
+            sudo apt-get install -y gcc-arm-linux-gnueabihf
+          elif [ "${{ matrix.platform }}" = "armv5" ]; then
+            sudo apt-get install -y gcc-arm-linux-gnueabi
+          elif [ "${{ matrix.platform }}" = "386" ]; then
+            sudo apt-get install -y gcc-i686-linux-gnu
+          elif [ "${{ matrix.platform }}" = "s390x" ]; then
+            sudo apt-get install -y gcc-s390x-linux-gnu
           fi
 
       - name: Build frontend
@@ -60,38 +66,38 @@ jobs:
           npm install
           npm run build
           cd ..
-          mv frontend/dist web/html
-          rm -fr frontend
+          mkdir -p web/html
+          rm -rf web/html/*
+          cp -R frontend/dist/* web/html/
 
       - name: Build s-ui
         run: |
           export CGO_ENABLED=1
           export GOOS=linux
           export GOARCH=${{ matrix.platform }}
-          if [ "${{ matrix.platform }}" == "arm64" ]; then
+          if [ "${{ matrix.platform }}" = "arm64" ]; then
             export GOARCH=arm64
             export CC=aarch64-linux-gnu-gcc
-          elif [ "${{ matrix.platform }}" == "armv7" ]; then
+          elif [ "${{ matrix.platform }}" = "armv7" ]; then
             export GOARCH=arm
             export GOARM=7
             export CC=arm-linux-gnueabihf-gcc
-          elif [ "${{ matrix.platform }}" == "armv6" ]; then
+          elif [ "${{ matrix.platform }}" = "armv6" ]; then
             export GOARCH=arm
             export GOARM=6
             export CC=arm-linux-gnueabihf-gcc
-          elif [ "${{ matrix.platform }}" == "armv5" ]; then
+          elif [ "${{ matrix.platform }}" = "armv5" ]; then
             export GOARCH=arm
             export GOARM=5
             export CC=arm-linux-gnueabi-gcc
-          elif [ "${{ matrix.platform }}" == "386" ]; then
+          elif [ "${{ matrix.platform }}" = "386" ]; then
             export GOARCH=386
             export CC=i686-linux-gnu-gcc
-          elif [ "${{ matrix.platform }}" == "s390x" ]; then
+          elif [ "${{ matrix.platform }}" = "s390x" ]; then
             export GOARCH=s390x
             export CC=s390x-linux-gnu-gcc
           fi
 
-          ### Build s-ui
           go build -ldflags="-w -s" -tags "with_quic,with_grpc,with_ech,with_utls,with_reality_server,with_acme,with_gvisor" -o sui main.go
 
           mkdir s-ui
@@ -102,11 +108,20 @@ jobs:
       - name: Package
         run: tar -zcvf s-ui-linux-${{ matrix.platform }}.tar.gz s-ui
 
+      - name: Determine release tag
+        id: release
+        run: |
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=v$(cat config/version)" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Upload
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ github.ref }}
+          tag: ${{ steps.release.outputs.tag }}
           file: s-ui-linux-${{ matrix.platform }}.tar.gz
           asset_name: s-ui-linux-${{ matrix.platform }}.tar.gz
           prerelease: true
