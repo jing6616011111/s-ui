@@ -20,11 +20,11 @@ curl -sS -O https://raw.githubusercontent.com/kejilion/sh/main/kejilion.sh && ch
 curl -sSL https://resource.fit2cloud.com/1panel/package/v2/quick_start.sh
 ```
 ## 安装ufw防火墙
-## 更新软件包
+更新软件包
 ```
 apt update
 ```
-## 安装ufw防火墙
+安装ufw防火墙
 ```
 apt install ufw
 ```
