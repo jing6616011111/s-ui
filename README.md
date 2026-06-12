@@ -2,9 +2,8 @@
 
 
 ## 依赖安装
-```apt update -y && apt install -y curl socat wget
-
-
+```
+apt update -y && apt install -y curl socat wget
 ```
 ## 安装代码
 ```sh
