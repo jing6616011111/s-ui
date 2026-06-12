@@ -28,11 +28,11 @@ apt update
 ```
 apt install ufw
 ```
-## ufw开放端口
+ufw开放端口
 ```
 ufw allow 22/tcp && ufw allow 80/tcp && ufw allow 443/tcp
 ```
-## 启动ufw防火墙
+启动ufw防火墙
 ```
 ufw enable
 ```
