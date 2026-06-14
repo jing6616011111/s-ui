@@ -3,6 +3,10 @@
 ```
 apt update -y && apt install -y curl socat wget
 ```
+## unzip安装
+```
+apt update && apt install -y unzip
+```
 ## SUI安装代码
 ```sh
 bash <(curl -fLsS https://raw.githubusercontent.com/jing6616011111/s-ui/main/install-mirror.sh)
