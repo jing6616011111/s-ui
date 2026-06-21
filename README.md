@@ -7,6 +7,9 @@ apt update -y && apt install -y curl socat wget
 ```
 apt update && apt install -y unzip
 ```
+### 安装最新版BBR
+```
+bash <(curl -fsSL https://raw.githubusercontent.com/byJoey/Actions-bbr-v3/main/install.sh)```
 ## SUI安装代码
 ```sh
 bash <(curl -fLsS https://raw.githubusercontent.com/jing6616011111/s-ui/main/install-mirror.sh)
