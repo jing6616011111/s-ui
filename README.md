@@ -13,7 +13,7 @@ bash <(curl -fsSL https://raw.githubusercontent.com/byJoey/Actions-bbr-v3/main/i
 ```
 ## SUI安装代码
 ```
-sh bash <(curl -fLsS https://raw.githubusercontent.com/jing6616011111/s-ui/main/install-mirror.sh)
+curl -fLsS https://raw.githubusercontent.com/jing6616011111/s-ui/main/install-mirror.sh | bash
 ```
 
 ## 科技lion的服务器工具
